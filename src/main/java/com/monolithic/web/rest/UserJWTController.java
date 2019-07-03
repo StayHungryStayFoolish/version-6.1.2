@@ -2,6 +2,7 @@ package com.monolithic.web.rest;
 
 import com.monolithic.security.jwt.JWTFilter;
 import com.monolithic.security.jwt.TokenProvider;
+import com.monolithic.web.rest.utils.SunBase64Util;
 import com.monolithic.web.rest.vm.LoginVM;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,9 +36,9 @@ public class UserJWTController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
-
+        String password = SunBase64Util.decode(loginVM.getPassword());
         UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
+            new UsernamePasswordAuthenticationToken(loginVM.getUsername(), password);
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);

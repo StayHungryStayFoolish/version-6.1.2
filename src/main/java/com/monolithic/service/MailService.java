@@ -1,13 +1,19 @@
 package com.monolithic.service;
 
+import com.monolithic.config.ApplicationProperties;
 import com.monolithic.domain.User;
 
+import com.monolithic.web.rest.vm.EmailUserVM;
 import io.github.jhipster.config.JHipsterProperties;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -32,6 +38,9 @@ public class MailService {
 
     private static final String BASE_URL = "baseUrl";
 
+    private String appMiddleName;
+    private String supportEmail;
+
     private final JHipsterProperties jHipsterProperties;
 
     private final JavaMailSender javaMailSender;
@@ -40,13 +49,18 @@ public class MailService {
 
     private final SpringTemplateEngine templateEngine;
 
+    private final ApplicationProperties applicationProperties;
+
     public MailService(JHipsterProperties jHipsterProperties, JavaMailSender javaMailSender,
-            MessageSource messageSource, SpringTemplateEngine templateEngine) {
+                       MessageSource messageSource, SpringTemplateEngine templateEngine, ApplicationProperties applicationProperties) {
 
         this.jHipsterProperties = jHipsterProperties;
         this.javaMailSender = javaMailSender;
         this.messageSource = messageSource;
         this.templateEngine = templateEngine;
+        this.applicationProperties = applicationProperties;
+        appMiddleName = applicationProperties.getAppMiddleName();
+        supportEmail = applicationProperties.getEmailConfig().getSupportEmail();
     }
 
     @Async
@@ -74,30 +88,46 @@ public class MailService {
     }
 
     @Async
-    public void sendEmailFromTemplate(User user, String templateName, String titleKey) {
+    public void sendEmailFromTemplate(EmailUserVM user, String templateName, String titleKey) {
+        user.setLogo(appMiddleName);
+        if (StringUtils.isNoneBlank(supportEmail)) {
+            user.setSupportEmail(supportEmail);
+        }
+        String langKey = user.getLangKey();
+        if ("zh-CN".equalsIgnoreCase(langKey) || "zh_CN".equalsIgnoreCase(langKey)) {
+            langKey = "cn";
+            user.setLangKey(langKey);
+        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(" yyyy-MM-dd HH:mm:ss ")
+            .withZone(ZoneId.systemDefault());
+        String loginDate = dateTimeFormatter.format(Instant.now());
+        user.setLoginDate(loginDate);
         Locale locale = Locale.forLanguageTag(user.getLangKey());
         Context context = new Context(locale);
         context.setVariable(USER, user);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process(templateName, context);
         String subject = messageSource.getMessage(titleKey, null, locale);
+        if (subject.contains("{0}")) {
+            subject = subject.replace("{0}", appMiddleName);
+        }
         sendEmail(user.getEmail(), subject, content, false, true);
     }
 
     @Async
-    public void sendActivationEmail(User user) {
+    public void sendActivationEmail(EmailUserVM user) {
         log.debug("Sending activation email to '{}'", user.getEmail());
         sendEmailFromTemplate(user, "mail/activationEmail", "email.activation.title");
     }
 
     @Async
-    public void sendCreationEmail(User user) {
+    public void sendCreationEmail(EmailUserVM user) {
         log.debug("Sending creation email to '{}'", user.getEmail());
         sendEmailFromTemplate(user, "mail/creationEmail", "email.activation.title");
     }
 
     @Async
-    public void sendPasswordResetMail(User user) {
+    public void sendPasswordResetMail(EmailUserVM user) {
         log.debug("Sending password reset email to '{}'", user.getEmail());
         sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
     }

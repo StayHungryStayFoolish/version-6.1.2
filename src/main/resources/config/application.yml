@@ -78,6 +78,18 @@ spring:
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    database: 0
+    timeout: 10000ms
+    jedis:
+      pool:
+        max-idle: 100
+        min-idle: 0
+        max-active: -1
+        max-wait: 30000ms
   messages:
     basename: i18n/messages
   main:
@@ -130,7 +142,7 @@ jhipster:
   mail:
     from: Monolithic@localhost
   swagger:
-    default-include-pattern: /api/.*
+    default-include-pattern: /(api|security)/.*
     title: Monolithic API
     description: Monolithic API documentation
     version: 0.0.1
@@ -149,4 +161,72 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+application:
+  sms-config:
+    aLi:
+      templates:
+        # CN
+        registryCN: SMS_134200343
+        welcomeCN: SMS_134200343
+        loginVerifyCN: SMS_134200343
+        loginNoticeCN: SMS_140040344
+        bindPhoneCN: SMS_134200343
+        changeOldPhoneCN: SMS_134200343
+        changeNewPhoneCN: SMS_134200343
+        # EN
+        registryEN: SMS_134200343
+        welcomeEN: SMS_134200343
+        loginVerifyEN: SMS_134200343
+        loginNoticeEN: SMS_140040344
+        bindPhoneEN: SMS_134200343
+        changeOldPhoneEN: SMS_134200343
+        changeNewPhoneEN: SMS_134200343
+        # KR
+        registryKR: SMS_134200343
+        welcomeKR: SMS_134200343
+        loginVerifyKR: SMS_134200343
+        loginNoticeKR: SMS_140040344
+        bindPhoneKR: SMS_134200343
+        changeOldPhoneKR: SMS_134200343
+        changeNewPhoneKR: SMS_134200343
+        # JP
+        registryJP: SMS_134200343
+        welcomeJP: SMS_134200343
+        loginVerifyJP: SMS_134200343
+        loginNoticeJP: SMS_140040344
+        bindPhoneJP: SMS_134200343
+        changeOldPhoneJP: SMS_134200343
+        changeNewPhoneJP: SMS_134200343
+    commonTemplates:
+      # CN
+      registryCN: ${application.appPrefixName} 您当前注册的 ${application.appMiddleName} ，验证码：%s。5分钟内有效，请勿告诉他人。
+      welcomeCN: ${application.appPrefixName} 尊敬的 %s 用户，您的 ${application.appMiddleName} 账户已创建，如有疑问请随时和我们联系。祝您使用愉快，${application.appMiddleName} 团队。
+      loginVerifyCN: ${application.appPrefixName} 您当前正在登录 ${application.appMiddleName} ，验证码：%s。5分钟内有效，请勿告诉他人。
+      loginNoticeCN: ${application.appPrefixName} 尊敬的 %s 用户：您于 %s 已经成功登陆 ${application.appMiddleName} ，如若不是本人，请您尽快修改密码，保障账户安全。
+      bindPhoneCN: ${application.appPrefixName} 您当前正在绑定本机号码，验证码：%s。5分钟内有效，请勿告诉他人。
+      changeOldPhoneCN: ${application.appPrefixName} 您当前正在解绑本机，验证码：%s。5分钟内有效，请勿告诉他人。
+      changeNewPhoneCN: ${application.appPrefixName} 您当前正在绑定本机，验证码：%s。5分钟内有效，请勿告诉他人。
+      # EN
+      registryEN: ${application.appPrefixName} You are registering for ${application.appMiddleName}. Your verification code is:%s. This is valid for 5 minutes. Do not disclose this code to others.
+      welcomeEN: ${application.appPrefixName} Dear %s, Your ${application.appMiddleName} account has been created. ${application.appMiddleName} Team.
+      loginVerifyEN: ${application.appPrefixName} You are logging into ${application.appMiddleName}. Your verification code is:%s. This is valid for 5 minutes. Do not disclose this code to others.
+      loginNoticeEN: ${application.appPrefixName} Dear %s, you have successfully logined at %s. If this is not executed by you, please change your account password as soon as possible .
+      bindPhoneEN: ${application.appPrefixName} You are linking ${application.appMiddleName} with this mobile number. Your verification code is:%s. This is valid for 5 minutes. Do not disclose this code to others.
+      changeOldPhoneEN: ${application.appPrefixName} You are unlinking this mobile number with ${application.appMiddleName}. The verification code is:%s. This is valid for 5 minutes. Do not disclose this code to others.
+      changeNewPhoneEN: ${application.appPrefixName} You are linking ${application.appMiddleName} with a mobile number. Your verification code is:%s. This is valid for 5 minutes. Do not disclose this code to others.
+      # KR
+      registryKR: ${application.appPrefixName} 회원가입 인증번호：%s。인증번호 입력 유효시간은 5분입니다。다른 사람에게 알려주지 마십시오。
+      welcomeKR: ${application.appPrefixName} 안녕하세요，고객님：%s。${application.appMiddleName} 계정이 생성되었습니다。질문이 있으시면 언제든지 문의해주십시오。즐겁고 수익 되는 거래가 되십시오。${application.appMiddleName} Team。
+      loginVerifyKR: ${application.appPrefixName} 로그인 인증번호：%s。인증번호 입력 유효시간은 5분입니다。다른 사람에게 알려주지 마십시오。
+      loginNoticeKR: ${application.appPrefixName} 님，%s 사용자님께：%s 의 ${application.appMiddleName} 성공적으로 로그인하셨습니다。아직 로그인하지 않으 셨다면 가능한 한 빨리 비밀 번호를 변경하여 。
+      bindPhoneKR: ${application.appPrefixName} 휴대폰 번호 연동 인증번호：%s。인증번호 입력 유효시간은 5분입니다。다른 사람에게 알려주지 마십시오。
+      changeOldPhoneKR: ${application.appPrefixName} 휴대폰 연동해제 인증번호：%s。인증번호 입력 유효시간은 5분입니다。다른 사람에게 알려주지 마십시오。
+      changeNewPhoneKR: ${application.appPrefixName} 휴대폰 연동 인증번호：%s。인증번호 입력 유효시간은 5분입니다。다른 사람에게 알려주지 마십시오。
+      # JP
+      registryJP: ${application.appPrefixName} ${application.appMiddleName} アカウントを作成いたします。認証コード：%s。5分以内に入力してください。また、認証コードは他人に教えないでください。
+      welcomeJP: ${application.appPrefixName} %s 様へ，${application.appMiddleName} アカウントが作成されました。疑問やご質問がございましたら、お問い合わせください。宜しくお願い申し上げます。${application.appMiddleName} チーム。
+      loginVerifyJP: ${application.appPrefixName} ログインを有効にいたします。認証コード：%s。5分以内に入力してください。また、認証コードは他人に教えないでください。
+      loginNoticeJP: ${application.appPrefixName} お客様 %s のログインが %s 時確認されました。心当たりが無い場合、アカウント紛失の可能性があります。直ちにパスワードを変更することをお勧めいたします。
+      bindPhoneJP: ${application.appPrefixName} 携帯番号を連携します。認証コード：%s。5分以内に入力してください。また、認証コードは他人に教えないでください。
+      changeOldPhoneJP: ${application.appPrefixName} 携帯番号連携を解除します。验证码：%s。5分以内に入力してください。また、認証コードは他人に教えないでください。
+      changeNewPhoneJP: ${application.appPrefixName} 携帯番号を連携します。認証コード：%s。5分以内に入力してください。また、認証コードは他人に教えないでください。

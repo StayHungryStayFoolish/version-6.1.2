@@ -1,51 +1,36 @@
-package com.monolithic.service.dto;
+package com.monolithic.web.rest.vm;
 
 import com.monolithic.config.Constants;
 
-import com.monolithic.domain.Authority;
-import com.monolithic.domain.User;
-
+import javax.persistence.Lob;
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-
-import javax.validation.constraints.*;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-/**
- * A DTO representing a user, with his authorities.
- */
-public class UserDTO implements Serializable {
+public class UserVM implements Serializable {
 
     private Long id;
 
-    @Pattern(regexp = Constants.LOGIN_REGEX_EMAIL)
-    @Email
-    @Size(min = 5, max = 100)
     private String email;
 
-    @Pattern(regexp = Constants.LOGIN_REGEX_PHONE)
-    @Size(min = 5, max = 50)
     private String phone;
 
-    @Size(min = 4, max = 39)
     private String appId;
 
-    @Size(max = 50)
     private String firstName;
 
-    @Size(max = 50)
     private String lastName;
 
-    @Size(max = 256)
     private String imageUrl;
 
     private boolean activated = false;
 
-    @Size(min = 2, max = 10)
     private String langKey;
+
+    private String activationKey;
 
     private String createdBy;
 
@@ -57,30 +42,6 @@ public class UserDTO implements Serializable {
 
     private Set<String> authorities;
 
-    public UserDTO() {
-        // Empty constructor needed for Jackson.
-    }
-
-    public UserDTO(User user) {
-        this.id = user.getId();
-        this.email = user.getEmail();
-        this.phone = user.getPhone();
-        this.appId = user.getAppId();
-        this.firstName = user.getFirstName();
-        this.lastName = user.getLastName();
-        this.email = user.getEmail();
-        this.activated = user.getActivated();
-        this.imageUrl = user.getImageUrl();
-        this.langKey = user.getLangKey();
-        this.createdBy = user.getCreatedBy();
-        this.createdDate = user.getCreatedDate();
-        this.lastModifiedBy = user.getLastModifiedBy();
-        this.lastModifiedDate = user.getLastModifiedDate();
-        this.authorities = user.getAuthorities().stream()
-            .map(Authority::getName)
-            .collect(Collectors.toSet());
-    }
-
     public Long getId() {
         return id;
     }
@@ -88,7 +49,6 @@ public class UserDTO implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
-
 
     public String getEmail() {
         return email;
@@ -154,6 +114,14 @@ public class UserDTO implements Serializable {
         this.langKey = langKey;
     }
 
+    public String getActivationKey() {
+        return activationKey;
+    }
+
+    public void setActivationKey(String activationKey) {
+        this.activationKey = activationKey;
+    }
+
     public String getCreatedBy() {
         return createdBy;
     }
@@ -196,7 +164,7 @@ public class UserDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "UserDTO{" +
+        return "UserVM{" +
             "id=" + id +
             ", email='" + email + '\'' +
             ", phone='" + phone + '\'' +
@@ -206,6 +174,7 @@ public class UserDTO implements Serializable {
             ", imageUrl='" + imageUrl + '\'' +
             ", activated=" + activated +
             ", langKey='" + langKey + '\'' +
+            ", activationKey='" + activationKey + '\'' +
             ", createdBy='" + createdBy + '\'' +
             ", createdDate=" + createdDate +
             ", lastModifiedBy='" + lastModifiedBy + '\'' +
@@ -214,3 +183,5 @@ public class UserDTO implements Serializable {
             '}';
     }
 }
+
+

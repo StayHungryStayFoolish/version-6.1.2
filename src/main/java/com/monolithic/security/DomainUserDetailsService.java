@@ -2,6 +2,7 @@ package com.monolithic.security;
 
 import com.monolithic.domain.User;
 import com.monolithic.repository.UserRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,17 +36,19 @@ public class DomainUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(final String login) {
         log.debug("Authenticating {}", login);
 
-        if (new EmailValidator().isValid(login, null)) {
-            return userRepository.findOneWithAuthoritiesByEmail(login)
-                .map(user -> createSpringSecurityUser(login, user))
-                .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
-        }
-
-        String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return userRepository.findOneWithAuthoritiesByLogin(lowercaseLogin)
-            .map(user -> createSpringSecurityUser(lowercaseLogin, user))
-            .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
-
+        Optional<User> userByEmailFromDatabase = userRepository.findOneWithAuthoritiesByEmail(login.toLowerCase(Locale.ENGLISH));
+        return userByEmailFromDatabase.map(user -> createSpringSecurityUser(login, user)).orElseGet(() -> {
+            Optional<User> userByLoginFromDatabase = userRepository.findOneWithAuthoritiesByPhone(login);
+            return userByLoginFromDatabase.map(user -> createSpringSecurityUser(login, user)).orElseGet(() -> {
+                Optional<User> userByInkIdFromDatabase = Optional.empty();
+                if (StringUtils.isNoneBlank(login)) {
+                    userByInkIdFromDatabase = userRepository.findOneWithAuthoritiesByAppId(login);
+                }
+                return userByInkIdFromDatabase.map(user -> createSpringSecurityUser(login, user)).orElseThrow(() ->
+                    new UsernameNotFoundException("User " + login + " was not found in the " +
+                        "database"));
+            });
+        });
     }
 
     private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
@@ -55,7 +58,7 @@ public class DomainUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> grantedAuthorities = user.getAuthorities().stream()
             .map(authority -> new SimpleGrantedAuthority(authority.getName()))
             .collect(Collectors.toList());
-        return new org.springframework.security.core.userdetails.User(user.getLogin(),
+        return new org.springframework.security.core.userdetails.User(user.getAppId(),
             user.getPassword(),
             grantedAuthorities);
     }

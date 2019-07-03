@@ -38,7 +38,8 @@ public class CacheConfiguration {
     @Bean
     public JCacheManagerCustomizer cacheManagerCustomizer() {
         return cm -> {
-            createCache(cm, com.monolithic.repository.UserRepository.USERS_BY_LOGIN_CACHE);
+            createCache(cm, com.monolithic.repository.UserRepository.USERS_BY_APP_ID_CACHE);
+            createCache(cm, com.monolithic.repository.UserRepository.USERS_BY_PHONE_CACHE);
             createCache(cm, com.monolithic.repository.UserRepository.USERS_BY_EMAIL_CACHE);
             createCache(cm, com.monolithic.domain.User.class.getName());
             createCache(cm, com.monolithic.domain.Authority.class.getName());

@@ -23,9 +23,9 @@ spring:
   profiles:
     active: dev
     include:
-      - swagger
-      # Uncomment to activate TLS for the dev profile
-      #- tls
+    - swagger
+    # Uncomment to activate TLS for the dev profile
+    #- tls
   devtools:
     restart:
       enabled: true
@@ -36,9 +36,9 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/Monolithic?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/monolithic?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
-    password:
+    password: admin
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -123,4 +123,34 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+application:
+  app-prefix-name: '[APP]'
+  app-middle-name: APP
+  email-config:
+    website:
+    support-email:
+  sms-config:
+    default-provider: twilio
+    aLi:
+      country-code:
+      product:
+      domain:
+      access-key-id:
+      access-key-secret:
+      sign-name:
+    twilio:
+      country-code:
+      account-id:
+      auth-token:
+      from-number:
+  rateLimit:
+    loginLimit:
+      dayExpire: 86400
+      dayLimit: 10
+    smsLimit:
+      dayExpire: 86400
+      dayLimit: 10
+      hourExpire: 3600
+      hourLimit: 5
+      minuteExpire: 60
+      minuteLimit: 2

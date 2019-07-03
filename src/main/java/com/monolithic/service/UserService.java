@@ -8,9 +8,11 @@ import com.monolithic.repository.UserRepository;
 import com.monolithic.security.AuthoritiesConstants;
 import com.monolithic.security.SecurityUtils;
 import com.monolithic.service.dto.UserDTO;
+import com.monolithic.service.util.LoginUtil;
 import com.monolithic.service.util.RandomUtil;
 import com.monolithic.web.rest.errors.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -88,28 +90,49 @@ public class UserService {
     }
 
     public User registerUser(UserDTO userDTO, String password) {
-        userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
-            boolean removed = removeNonActivatedUser(existingUser);
-            if (!removed) {
-                throw new LoginAlreadyUsedException();
-            }
-        });
-        userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).ifPresent(existingUser -> {
-            boolean removed = removeNonActivatedUser(existingUser);
-            if (!removed) {
-                throw new EmailAlreadyUsedException();
-            }
-        });
+
+        String email = userDTO.getEmail();
+        String phone = userDTO.getPhone();
+
+        if (StringUtils.isNoneBlank(email)) {
+            userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).ifPresent(existingUser -> {
+                boolean removed = removeNonActivatedUser(existingUser);
+                if (!removed) {
+                    throw new EmailAlreadyUsedException();
+                }
+            });
+        }
+
+        if (StringUtils.isNoneBlank(phone)) {
+            userRepository.findOneByPhone(userDTO.getPhone()).ifPresent(existingUser -> {
+                boolean removed = removeNonActivatedUser(existingUser);
+                if (!removed) {
+                    throw new PhoneAlreadyUsedException();
+                }
+            });
+        }
+
+
         User newUser = new User();
         String encryptedPassword = passwordEncoder.encode(password);
-        newUser.setLogin(userDTO.getLogin().toLowerCase());
+        if (StringUtils.isNoneBlank(email)) {
+            newUser.setEmail(userDTO.getEmail().toLowerCase());
+        }
+        if (StringUtils.isNoneBlank(phone)) {
+            newUser.setPhone(userDTO.getPhone());
+        }
+        newUser.setAppId(RandomUtil.generateAppId());
         // new user gets initially a generated password
         newUser.setPassword(encryptedPassword);
         newUser.setFirstName(userDTO.getFirstName());
         newUser.setLastName(userDTO.getLastName());
-        newUser.setEmail(userDTO.getEmail().toLowerCase());
         newUser.setImageUrl(userDTO.getImageUrl());
-        newUser.setLangKey(userDTO.getLangKey());
+        if (null == userDTO.getLangKey()) {
+            newUser.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
+        } else {
+            newUser.setLangKey(userDTO.getLangKey());
+        }
+
         // new user is not active
         newUser.setActivated(false);
         // new user gets registration key
@@ -135,10 +158,11 @@ public class UserService {
 
     public User createUser(UserDTO userDTO) {
         User user = new User();
-        user.setLogin(userDTO.getLogin().toLowerCase());
+        user.setEmail(userDTO.getEmail().toLowerCase());
+        user.setPhone(userDTO.getPhone());
+        user.setAppId(userDTO.getAppId());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmail().toLowerCase());
         user.setImageUrl(userDTO.getImageUrl());
         if (userDTO.getLangKey() == null) {
             user.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
@@ -167,20 +191,28 @@ public class UserService {
     /**
      * Update basic information (first name, last name, email, language) for the current user.
      *
+     * @param email     email id of user.
+     * @param phone     phone id of user.
+     * @param langKey   language key.
      * @param firstName first name of user.
      * @param lastName  last name of user.
-     * @param email     email id of user.
-     * @param langKey   language key.
      * @param imageUrl  image URL of user.
      */
-    public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
+    public void updateUser(String email, String phone, String langKey, String firstName, String lastName, String imageUrl) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneByLogin)
+            .flatMap(userRepository::findOneByAppId)
             .ifPresent(user -> {
+                if (StringUtils.isNoneBlank(email)) {
+                    user.setEmail(email.toLowerCase());
+                }
+                if (StringUtils.isNoneBlank(phone)) {
+                    user.setPhone(phone);
+                }
+                if (StringUtils.isNoneBlank(langKey)) {
+                    user.setLangKey(langKey);
+                }
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
-                user.setEmail(email.toLowerCase());
-                user.setLangKey(langKey);
                 user.setImageUrl(imageUrl);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
@@ -200,13 +232,19 @@ public class UserService {
             .map(Optional::get)
             .map(user -> {
                 this.clearUserCaches(user);
-                user.setLogin(userDTO.getLogin().toLowerCase());
+                if (StringUtils.isNoneBlank(userDTO.getEmail())) {
+                    user.setEmail(userDTO.getEmail().toLowerCase());
+                }
+                if (StringUtils.isNoneBlank(userDTO.getPhone())) {
+                    user.setPhone(userDTO.getPhone());
+                }
+                if (StringUtils.isNoneBlank(userDTO.getLangKey())) {
+                    user.setLangKey(userDTO.getLangKey());
+                }
                 user.setFirstName(userDTO.getFirstName());
                 user.setLastName(userDTO.getLastName());
-                user.setEmail(userDTO.getEmail().toLowerCase());
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
-                user.setLangKey(userDTO.getLangKey());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
                 userDTO.getAuthorities().stream()
@@ -222,16 +260,17 @@ public class UserService {
     }
 
     public void deleteUser(String login) {
-        userRepository.findOneByLogin(login).ifPresent(user -> {
-            userRepository.delete(user);
-            this.clearUserCaches(user);
-            log.debug("Deleted User: {}", user);
-        });
+        Optional<User> userOptional = LoginUtil.findUserByLogin(login, userRepository);
+        if (userOptional.isPresent()) {
+                userRepository.delete(userOptional.get());
+                this.clearUserCaches(userOptional.get());
+                log.debug("Deleted User: {}", userOptional.get());
+        }
     }
 
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneByLogin)
+            .flatMap(userRepository::findOneByAppId)
             .ifPresent(user -> {
                 String currentEncryptedPassword = user.getPassword();
                 if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
@@ -246,12 +285,22 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllManagedUsers(Pageable pageable) {
-        return userRepository.findAllByLoginNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
+        return userRepository.findAllByEmailNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
     }
 
     @Transactional(readOnly = true)
-    public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRepository.findOneWithAuthoritiesByLogin(login);
+    public Optional<User> getUserWithAuthoritiesByEmail(String email) {
+        return userRepository.findOneWithAuthoritiesByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> getUserWithAuthoritiesByPhone(String phone) {
+        return userRepository.findOneWithAuthoritiesByPhone(phone);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> getUserWithAuthoritiesByAppId(String appId) {
+        return userRepository.findOneWithAuthoritiesByAppId(appId);
     }
 
     @Transactional(readOnly = true)
@@ -261,7 +310,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities() {
-        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByLogin);
+        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByAppId);
     }
 
     /**
@@ -274,7 +323,7 @@ public class UserService {
         userRepository
             .findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedDateBefore(Instant.now().minus(3, ChronoUnit.DAYS))
             .forEach(user -> {
-                log.debug("Deleting not activated user {}", user.getLogin());
+                log.debug("Deleting not activated user email : {} ,phone : {}", user.getEmail(), user.getEmail());
                 userRepository.delete(user);
                 this.clearUserCaches(user);
             });
@@ -290,7 +339,8 @@ public class UserService {
 
 
     private void clearUserCaches(User user) {
-        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_PHONE_CACHE)).evict(user.getPhone());
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_APP_ID_CACHE)).evict(user.getAppId());
     }
 }

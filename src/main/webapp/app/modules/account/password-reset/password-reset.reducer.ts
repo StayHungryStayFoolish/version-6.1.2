@@ -2,6 +2,7 @@ import axios from 'axios';
 import { translate } from 'react-jhipster';
 
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
+import {base64} from "app/shared/util/base64_password";
 
 export const ACTION_TYPES = {
   RESET_PASSWORD_INIT: 'passwordReset/RESET_PASSWORD_INIT',
@@ -62,13 +63,17 @@ export const handlePasswordResetInit = mail => ({
   }
 });
 
-export const handlePasswordResetFinish = (key, newPassword) => ({
-  type: ACTION_TYPES.RESET_PASSWORD_FINISH,
-  payload: axios.post(`${apiUrl}/finish`, { key, newPassword }),
-  meta: {
-    successMessage: translate('reset.finish.messages.success')
-  }
-});
+export const handlePasswordResetFinish = (key, newPassword) => {
+  var base = new base64();
+  newPassword = base.decode(newPassword);
+  return ({
+    type: ACTION_TYPES.RESET_PASSWORD_FINISH,
+    payload: axios.post(`${apiUrl}/finish`, { key, newPassword }),
+    meta: {
+      successMessage: translate('reset.finish.messages.success')
+    }
+  })
+};
 
 export const reset = () => ({
   type: ACTION_TYPES.RESET

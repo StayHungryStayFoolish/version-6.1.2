@@ -7,14 +7,18 @@ import com.monolithic.security.AuthoritiesConstants;
 import com.monolithic.service.MailService;
 import com.monolithic.service.UserService;
 import com.monolithic.service.dto.UserDTO;
+import com.monolithic.service.util.LoginUtil;
 import com.monolithic.web.rest.errors.BadRequestAlertException;
 import com.monolithic.web.rest.errors.EmailAlreadyUsedException;
 import com.monolithic.web.rest.errors.LoginAlreadyUsedException;
 
+import com.monolithic.web.rest.errors.PhoneAlreadyUsedException;
+import com.monolithic.web.rest.utils.EmailUtil;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,15 +103,15 @@ public class UserResource {
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
             // Lowercase the user login before comparing with database
-        } else if (userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
-            throw new LoginAlreadyUsedException();
         } else if (userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
+        } else if (userRepository.findOneByPhone(userDTO.getPhone()).isPresent()) {
+            throw new LoginAlreadyUsedException();
         } else {
             User newUser = userService.createUser(userDTO);
-            mailService.sendCreationEmail(newUser);
-            return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .headers(HeaderUtil.createAlert(applicationName,  "userManagement.created", newUser.getLogin()))
+            mailService.sendCreationEmail(EmailUtil.transferEmailUser(newUser));
+            return ResponseEntity.created(new URI("/api/users/" + newUser.getAppId()))
+                .headers(HeaderUtil.createAlert(applicationName,  "userManagement.created", newUser.getAppId()))
                 .body(newUser);
         }
     }
@@ -124,18 +128,24 @@ public class UserResource {
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
-            throw new EmailAlreadyUsedException();
+        Optional<User> existingUser = Optional.empty();
+        if (StringUtils.isNoneBlank(userDTO.getEmail())) {
+            existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+            if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
+                throw new EmailAlreadyUsedException();
+            }
         }
-        existingUser = userRepository.findOneByLogin(userDTO.getLogin().toLowerCase());
-        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
-            throw new LoginAlreadyUsedException();
+        if (StringUtils.isNoneBlank(userDTO.getPhone())) {
+            existingUser = userRepository.findOneByPhone(userDTO.getPhone());
+            if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
+                throw new PhoneAlreadyUsedException();
+            }
         }
+
         Optional<UserDTO> updatedUser = userService.updateUser(userDTO);
 
         return ResponseUtil.wrapOrNotFound(updatedUser,
-            HeaderUtil.createAlert(applicationName, "userManagement.updated", userDTO.getLogin()));
+            HeaderUtil.createAlert(applicationName, "userManagement.updated", userDTO.getEmail() + userDTO.getPhone()));
     }
 
     /**
@@ -169,12 +179,11 @@ public class UserResource {
      * @param login the login of the user to find.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the "login" user, or with status {@code 404 (Not Found)}.
      */
-    @GetMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
+    @GetMapping("/users/{login:.+}")
     public ResponseEntity<UserDTO> getUser(@PathVariable String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
-            userService.getUserWithAuthoritiesByLogin(login)
-                .map(UserDTO::new));
+            LoginUtil.returnUserByLogin(login, userService).map(UserDTO::new));
     }
 
     /**
@@ -183,7 +192,7 @@ public class UserResource {
      * @param login the login of the user to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
+    @DeleteMapping("/users/{login:.+}")
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteUser(@PathVariable String login) {
         log.debug("REST request to delete User: {}", login);

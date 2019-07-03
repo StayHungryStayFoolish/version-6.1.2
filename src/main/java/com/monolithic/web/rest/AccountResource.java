@@ -9,6 +9,9 @@ import com.monolithic.service.UserService;
 import com.monolithic.service.dto.PasswordChangeDTO;
 import com.monolithic.service.dto.UserDTO;
 import com.monolithic.web.rest.errors.*;
+import com.monolithic.web.rest.utils.EmailUtil;
+import com.monolithic.web.rest.utils.SunBase64Util;
+import com.monolithic.web.rest.vm.EmailUserVM;
 import com.monolithic.web.rest.vm.KeyAndPasswordVM;
 import com.monolithic.web.rest.vm.ManagedUserVM;
 
@@ -61,11 +64,12 @@ public class AccountResource {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
-        if (!checkPasswordLength(managedUserVM.getPassword())) {
+        String password = SunBase64Util.decode(managedUserVM.getPassword());
+        if (!checkPasswordLength(password)) {
             throw new InvalidPasswordException();
         }
-        User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
-        mailService.sendActivationEmail(user);
+        User user = userService.registerUser(managedUserVM, password);
+        mailService.sendActivationEmail(EmailUtil.transferEmailUser(user));
     }
 
     /**
@@ -116,17 +120,28 @@ public class AccountResource {
      */
     @PostMapping("/account")
     public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
-        String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
-            throw new EmailAlreadyUsedException();
+        String appId = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
+
+        Optional<User> existingUser = Optional.empty();
+
+        if (StringUtils.isNoneBlank(userDTO.getEmail())) {
+            existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+            if (existingUser.isPresent() && (existingUser.get().getEmail().equalsIgnoreCase(userDTO.getEmail()))) {
+                throw new EmailAlreadyUsedException();
+            }
         }
-        Optional<User> user = userRepository.findOneByLogin(userLogin);
+        if (!existingUser.isPresent() && StringUtils.isNoneBlank(userDTO.getPhone())) {
+            existingUser = userRepository.findOneByPhone(userDTO.getPhone());
+            if (existingUser.isPresent() && (existingUser.get().getPhone().equalsIgnoreCase(userDTO.getPhone()))) {
+                throw new PhoneAlreadyUsedException();
+            }
+        }
+        Optional<User> user = userRepository.findOneByAppId(appId);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
-        userService.updateUser(userDTO.getFirstName(), userDTO.getLastName(), userDTO.getEmail(),
-            userDTO.getLangKey(), userDTO.getImageUrl());
+        userService.updateUser(userDTO.getEmail(), userDTO.getPhone(),
+            userDTO.getLangKey(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getImageUrl());
     }
 
     /**
@@ -137,10 +152,12 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/change-password")
     public void changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
-        if (!checkPasswordLength(passwordChangeDto.getNewPassword())) {
+        String currentPass = SunBase64Util.decode(passwordChangeDto.getCurrentPassword());
+        String newPass = SunBase64Util.decode(passwordChangeDto.getNewPassword());
+        if (!checkPasswordLength(newPass)) {
             throw new InvalidPasswordException();
         }
-        userService.changePassword(passwordChangeDto.getCurrentPassword(), passwordChangeDto.getNewPassword());
+        userService.changePassword(currentPass, newPass);
     }
 
     /**
@@ -151,10 +168,8 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/reset-password/init")
     public void requestPasswordReset(@RequestBody String mail) {
-       mailService.sendPasswordResetMail(
-           userService.requestPasswordReset(mail)
-               .orElseThrow(EmailNotFoundException::new)
-       );
+        User user = userService.requestPasswordReset(mail).orElseThrow(EmailNotFoundException::new);
+        mailService.sendPasswordResetMail(EmailUtil.transferEmailUser(user));
     }
 
     /**
@@ -166,11 +181,12 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/reset-password/finish")
     public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
-        if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
+        String newPass = SunBase64Util.decode(keyAndPassword.getNewPassword());
+        if (!checkPasswordLength(newPass)) {
             throw new InvalidPasswordException();
         }
         Optional<User> user =
-            userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
+            userService.completePasswordReset(newPass, keyAndPassword.getKey());
 
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");

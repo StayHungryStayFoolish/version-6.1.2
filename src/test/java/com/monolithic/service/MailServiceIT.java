@@ -1,9 +1,9 @@
 package com.monolithic.service;
 
-import com.monolithic.config.Constants;
-
 import com.monolithic.MonolithicApp;
-import com.monolithic.domain.User;
+import com.monolithic.config.ApplicationProperties;
+import com.monolithic.config.Constants;
+import com.monolithic.web.rest.vm.EmailUserVM;
 import io.github.jhipster.config.JHipsterProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,13 +29,11 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -61,6 +59,9 @@ public class MailServiceIT {
 
     @Autowired
     private SpringTemplateEngine templateEngine;
+    
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Spy
     private JavaMailSenderImpl javaMailSender;
@@ -74,7 +75,7 @@ public class MailServiceIT {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         doNothing().when(javaMailSender).send(any(MimeMessage.class));
-        mailService = new MailService(jHipsterProperties, javaMailSender, messageSource, templateEngine);
+        mailService = new MailService(jHipsterProperties, javaMailSender, messageSource, templateEngine, applicationProperties);
     }
 
     @Test
@@ -139,8 +140,8 @@ public class MailServiceIT {
 
     @Test
     public void testSendEmailFromTemplate() throws Exception {
-        User user = new User();
-        user.setLogin("john");
+        EmailUserVM user = new EmailUserVM();
+        user.setPhone("john");
         user.setEmail("john.doe@example.com");
         user.setLangKey("en");
         mailService.sendEmailFromTemplate(user, "mail/testEmail", "email.test.title");
@@ -155,9 +156,9 @@ public class MailServiceIT {
 
     @Test
     public void testSendActivationEmail() throws Exception {
-        User user = new User();
+        EmailUserVM user = new EmailUserVM();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
+        user.setPhone("john");
         user.setEmail("john.doe@example.com");
         mailService.sendActivationEmail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -170,9 +171,9 @@ public class MailServiceIT {
 
     @Test
     public void testCreationEmail() throws Exception {
-        User user = new User();
+        EmailUserVM user = new EmailUserVM();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
+        user.setPhone("john");
         user.setEmail("john.doe@example.com");
         mailService.sendCreationEmail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -185,9 +186,9 @@ public class MailServiceIT {
 
     @Test
     public void testSendPasswordResetMail() throws Exception {
-        User user = new User();
+        EmailUserVM user = new EmailUserVM();
         user.setLangKey(Constants.DEFAULT_LANGUAGE);
-        user.setLogin("john");
+        user.setPhone("john");
         user.setEmail("john.doe@example.com");
         mailService.sendPasswordResetMail(user);
         verify(javaMailSender).send(messageCaptor.capture());
@@ -206,8 +207,8 @@ public class MailServiceIT {
 
     @Test
     public void testSendLocalizedEmailForAllSupportedLanguages() throws Exception {
-        User user = new User();
-        user.setLogin("john");
+        EmailUserVM user = new EmailUserVM();
+        user.setPhone("john");
         user.setEmail("john.doe@example.com");
         for (String langKey : languages) {
             user.setLangKey(langKey);
