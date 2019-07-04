@@ -1,0 +1,27 @@
+{
+  "monolithicApp": {
+    "iPRecords": {
+      "home": {
+        "title": "IP Records",
+        "createLabel": "创建新 IP Records",
+        "createOrEditLabel": "创建或编辑 IP Records",
+        "notFound": "No IP Records found"
+      },
+      "created": "IP Records {{ param }} 创建成功",
+      "updated": "IP Records {{ param }} 更新成功",
+      "deleted": "IP Records {{ param }} 删除成功",
+      "delete": {
+        "question": "你确定要删除 IP Records {{ id }} 吗？"
+      },
+      "detail": {
+        "title": "IP Records"
+      },
+      "userId": "User Id",
+      "device": "Device",
+      "ipAddress": "Ip Address",
+      "countryName": "Country Name",
+      "cityName": "City Name",
+      "status": "Status"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "monolithicApp": {
+    "iPRecords": {
+      "home": {
+        "title": "IP Records",
+        "createLabel": "Create a new IP Records",
+        "createOrEditLabel": "Create or edit a IP Records",
+        "notFound": "No IP Records found"
+      },
+      "created": "A new IP Records is created with identifier {{ param }}",
+      "updated": "A IP Records is updated with identifier {{ param }}",
+      "deleted": "A IP Records is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete IP Records {{ id }}?"
+      },
+      "detail": {
+        "title": "IP Records"
+      },
+      "userId": "User Id",
+      "device": "Device",
+      "ipAddress": "Ip Address",
+      "countryName": "Country Name",
+      "cityName": "City Name",
+      "status": "Status"
+    }
+  }
+}
