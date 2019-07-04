@@ -162,41 +162,42 @@ jhipster:
 # ===================================================================
 
 application:
+  ip-api: http://ip-api.com/json/
   sms-config:
     aLi:
       templates:
         # CN
-        registryCN: SMS_134200343
-        welcomeCN: SMS_134200343
-        loginVerifyCN: SMS_134200343
-        loginNoticeCN: SMS_140040344
-        bindPhoneCN: SMS_134200343
-        changeOldPhoneCN: SMS_134200343
-        changeNewPhoneCN: SMS_134200343
+        registryCN:
+        welcomeCN:
+        loginVerifyCN:
+        loginNoticeCN:
+        bindPhoneCN:
+        changeOldPhoneCN:
+        changeNewPhoneCN:
         # EN
-        registryEN: SMS_134200343
-        welcomeEN: SMS_134200343
-        loginVerifyEN: SMS_134200343
-        loginNoticeEN: SMS_140040344
-        bindPhoneEN: SMS_134200343
-        changeOldPhoneEN: SMS_134200343
-        changeNewPhoneEN: SMS_134200343
+        registryEN:
+        welcomeEN:
+        loginVerifyEN:
+        loginNoticeEN:
+        bindPhoneEN:
+        changeOldPhoneEN:
+        changeNewPhoneEN:
         # KR
-        registryKR: SMS_134200343
-        welcomeKR: SMS_134200343
-        loginVerifyKR: SMS_134200343
-        loginNoticeKR: SMS_140040344
-        bindPhoneKR: SMS_134200343
-        changeOldPhoneKR: SMS_134200343
-        changeNewPhoneKR: SMS_134200343
+        registryKR:
+        welcomeKR:
+        loginVerifyKR:
+        loginNoticeKR:
+        bindPhoneKR:
+        changeOldPhoneKR:
+        changeNewPhoneKR:
         # JP
-        registryJP: SMS_134200343
-        welcomeJP: SMS_134200343
-        loginVerifyJP: SMS_134200343
-        loginNoticeJP: SMS_140040344
-        bindPhoneJP: SMS_134200343
-        changeOldPhoneJP: SMS_134200343
-        changeNewPhoneJP: SMS_134200343
+        registryJP:
+        welcomeJP:
+        loginVerifyJP:
+        loginNoticeJP:
+        bindPhoneJP:
+        changeOldPhoneJP:
+        changeNewPhoneJP:
     commonTemplates:
       # CN
       registryCN: ${application.appPrefixName} 您当前注册的 ${application.appMiddleName} ，验证码：%s。5分钟内有效，请勿告诉他人。

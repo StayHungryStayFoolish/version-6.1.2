@@ -306,7 +306,7 @@ public class ALiSms extends MultiSms {
         String result = "";
         switch (smsResult){
             case Constants.SEND_SMS_SUCCESS:
-                // regCN -> reg
+                // registryCN -> registry
                 type = StringConvertUtil.trimAtEndIndex(type, 2);
                 // concat "+86" is same with other services (twilio , nexmo )
                 redisTemplate.opsForValue().set(Constants.SMS_CODE.concat(type).concat("+86").concat(phone), authCode, 300, TimeUnit.SECONDS);

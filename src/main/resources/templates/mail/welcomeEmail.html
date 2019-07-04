@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title th:text="#{email.welcome.title(${user.logo})}">JHipster activation</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}" />
+    </head>
+    <body>
+        <p th:text="#{email.welcome.greeting(${user.email})}">
+            Dear
+        </p>
+        <p th:text="#{email.welcome.text1(${user.logo})}">
+            Your account has been created and is welcome to be a member of our website.
+        </p>
+        <p th:text="#{email.welcome.text2(${user.logo})}">
+            Your APP account has been created. Feel free to contact us if you have any questions.
+        </p>
+        <p>
+            <span th:text="#{email.welcome.text3}">Regards, </span>
+            <br/>
+            <em th:text="#{email.welcome.signature(${user.logo})}">APP</em>
+        </p>
+
+            <br/>
+            <br/>
+            <br/>
+
+        <div style="font-size: 10px;color: #737373">
+            <p th:text="#{email.automated1}">
+                ※This email has been automatically generated, please don't reply to this email
+            </p>
+            <p th:text="#{email.automated2}">
+                ※If you have any questions or concerns regarding us, feel free to contact support at:
+            </p>
+            <a th:href="'mailto:' + #{email.support(${user.getSupportEmail()})}">
+                <span th:text="#{email.support(${user.getSupportEmail()})}">Support Email </span>
+            </a>
+        </div>
+
+
+    </body>
+</html>

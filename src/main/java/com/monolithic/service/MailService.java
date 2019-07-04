@@ -131,4 +131,16 @@ public class MailService {
         log.debug("Sending password reset email to '{}'", user.getEmail());
         sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
     }
+
+    @Async
+    public void sendWelcomeMail(EmailUserVM user) {
+        log.debug("Sending password reset email to '{}'", user.getEmail());
+        sendEmailFromTemplate(user, "mail/welcomeEmail", "email.welcome.title");
+    }
+
+    @Async
+    public void sendLoginNotificationMail(EmailUserVM user) {
+        log.debug("Sending password reset email to '{}'", user.getEmail());
+        sendEmailFromTemplate(user, "mail/loginNotificationEmail", "email.login.title");
+    }
 }

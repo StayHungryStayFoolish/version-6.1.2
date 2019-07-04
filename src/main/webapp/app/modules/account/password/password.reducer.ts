@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { translate } from 'react-jhipster';
-import { base64 } from 'app/shared/util/base64_password';
 
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
@@ -54,20 +53,17 @@ export default (state: PasswordState = initialState, action): PasswordState => {
 // Actions
 const apiUrl = 'api/account';
 
-
-
 export const savePassword = (currentPassword, newPassword) => {
-  var base = new base64();
-  currentPassword = base.decode(currentPassword);
-  newPassword = base.decode(newPassword);
-  return  ({
+  currentPassword = btoa(currentPassword);
+  newPassword = btoa(newPassword);
+  return {
     type: ACTION_TYPES.UPDATE_PASSWORD,
     payload: axios.post(`${apiUrl}/change-password`, { currentPassword, newPassword }),
     meta: {
       successMessage: translate('password.messages.success'),
       errorMessage: translate('password.messages.error')
     }
-  })
+  };
 };
 
 export const reset = () => ({

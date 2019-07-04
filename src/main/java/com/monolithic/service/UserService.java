@@ -339,8 +339,12 @@ public class UserService {
 
 
     private void clearUserCaches(User user) {
-        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
-        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_PHONE_CACHE)).evict(user.getPhone());
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+        }
+        if (StringUtils.isNotBlank(user.getPhone())) {
+            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_PHONE_CACHE)).evict(user.getPhone());
+        }
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_APP_ID_CACHE)).evict(user.getAppId());
     }
 }

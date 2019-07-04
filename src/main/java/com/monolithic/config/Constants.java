@@ -23,6 +23,7 @@ public final class Constants {
     public static final String CHECK_NOT_EXISTS = "checkNotExists";
 
     // Redis key
+    public static final String USER_CACHE = "USER:";
     public static final String SMS_CODE = "AUTH_SMS_CODE:";
     public static final String USER_SECURE_STATUS = "USER_SECURE_STATUS:";
     // Login Limit Level Redis Key

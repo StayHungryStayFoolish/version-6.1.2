@@ -126,8 +126,6 @@ public class PublicInfoResource {
         log.debug("REST request verify sms code type : {} ,phone : {} ,authCode : {}", type, phone, authCode);
         String country = StringConvertUtil.getFrontAtSymbol(phone, "-").replace("+", "");
         MultiSms sms = smsService.getInstance(country);
-        // registryCN -> registry
-        type = StringConvertUtil.trimAtEndIndex(type, 2);
         try {
             return sms.verifyCode(type, phone, authCode).get();
         } catch (InterruptedException | ExecutionException e) {

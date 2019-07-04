@@ -1,9 +1,11 @@
 package com.monolithic.web.rest;
 
 
+import com.monolithic.config.ApplicationProperties;
 import com.monolithic.domain.User;
 import com.monolithic.repository.UserRepository;
 import com.monolithic.security.SecurityUtils;
+import com.monolithic.service.AsyncIpService;
 import com.monolithic.service.MailService;
 import com.monolithic.service.UserService;
 import com.monolithic.service.dto.PasswordChangeDTO;
@@ -11,19 +13,18 @@ import com.monolithic.service.dto.UserDTO;
 import com.monolithic.web.rest.errors.*;
 import com.monolithic.web.rest.utils.EmailUtil;
 import com.monolithic.web.rest.utils.SunBase64Util;
-import com.monolithic.web.rest.vm.EmailUserVM;
 import com.monolithic.web.rest.vm.KeyAndPasswordVM;
 import com.monolithic.web.rest.vm.ManagedUserVM;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Optional;
 
 /**
  * REST controller for managing the current user's account.
@@ -46,11 +47,20 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final RedisTemplate redisTemplate;
+
+    private final AsyncIpService asyncIpService;
+
+    private final ApplicationProperties properties;
+
+    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService, RedisTemplate redisTemplate, AsyncIpService asyncIpService, ApplicationProperties properties) {
 
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.redisTemplate = redisTemplate;
+        this.asyncIpService = asyncIpService;
+        this.properties = properties;
     }
 
     /**
@@ -69,7 +79,9 @@ public class AccountResource {
             throw new InvalidPasswordException();
         }
         User user = userService.registerUser(managedUserVM, password);
-        mailService.sendActivationEmail(EmailUtil.transferEmailUser(user));
+        if (StringUtils.isNoneBlank(user.getEmail())) {
+            mailService.sendActivationEmail(EmailUtil.transferEmailUser(user));
+        }
     }
 
     /**
@@ -83,6 +95,8 @@ public class AccountResource {
         Optional<User> user = userService.activateRegistration(key);
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this activation key");
+        } else {
+            mailService.sendWelcomeMail(EmailUtil.transferEmailUser(user.get()));
         }
     }
 
@@ -112,10 +126,29 @@ public class AccountResource {
     }
 
     /**
+     * {@code GET  /account} : get the current user.
+     *
+     * @return the current user.
+     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be returned.
+     */
+    @GetMapping("/account-callback")
+    public UserDTO callback(HttpServletRequest request) {
+        UserDTO userDTO = userService.getUserWithAuthorities()
+            .map(UserDTO::new)
+            .orElseThrow(() -> new AccountResourceException("User could not be found"));
+        if (StringUtils.isNotBlank(userDTO.getEmail())) {
+            mailService.sendLoginNotificationMail(EmailUtil.transferEmailUserDTO(userDTO));
+        }
+        asyncIpService.ip(request, userDTO);
+        return userDTO;
+    }
+
+    /**
      * {@code POST  /account} : update the current user information.
      *
      * @param userDTO the current user information.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     * @throws PhoneAlreadyUsedException {@code 400 (Bad Request)} if the phone is already used.
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")

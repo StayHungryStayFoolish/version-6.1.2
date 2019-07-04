@@ -1,0 +1,15 @@
+entity IPRecords {
+	userId Long required ,
+	device String required ,
+	ipAddress String required ,
+    countryName String ,
+    cityName String ,
+    status String
+}
+
+paginate IPRecords with pagination
+
+dto * with mapstruct
+
+// Set service options to all
+service all with serviceImpl

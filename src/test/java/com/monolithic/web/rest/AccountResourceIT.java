@@ -1,12 +1,14 @@
 package com.monolithic.web.rest;
 
 import com.monolithic.MonolithicApp;
+import com.monolithic.config.ApplicationProperties;
 import com.monolithic.config.Constants;
 import com.monolithic.domain.Authority;
 import com.monolithic.domain.User;
 import com.monolithic.repository.AuthorityRepository;
 import com.monolithic.repository.UserRepository;
 import com.monolithic.security.AuthoritiesConstants;
+import com.monolithic.service.AsyncIpService;
 import com.monolithic.service.MailService;
 import com.monolithic.service.UserService;
 import com.monolithic.service.dto.PasswordChangeDTO;
@@ -22,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -64,6 +67,16 @@ public class AccountResourceIT {
     @Autowired
     private ExceptionTranslator exceptionTranslator;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private AsyncIpService asyncIpService;
+
+    @Autowired
+    private ApplicationProperties properties;
+
+
     @Mock
     private UserService mockUserService;
 
@@ -79,10 +92,10 @@ public class AccountResourceIT {
         MockitoAnnotations.initMocks(this);
         doNothing().when(mockMailService).sendActivationEmail(any());
         AccountResource accountResource =
-            new AccountResource(userRepository, userService, mockMailService);
+            new AccountResource(userRepository, userService, mockMailService, redisTemplate, asyncIpService, properties);
 
         AccountResource accountUserMockResource =
-            new AccountResource(userRepository, mockUserService, mockMailService);
+            new AccountResource(userRepository, mockUserService, mockMailService, redisTemplate, asyncIpService, properties);
         this.restMvc = MockMvcBuilders.standaloneSetup(accountResource)
             .setMessageConverters(httpMessageConverters)
             .setControllerAdvice(exceptionTranslator)

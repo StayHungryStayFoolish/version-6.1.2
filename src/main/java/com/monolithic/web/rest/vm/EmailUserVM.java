@@ -12,6 +12,8 @@ public class EmailUserVM implements Serializable {
 
     private String website;
 
+    private String activationKey;
+
     private String resetKey;
 
     private String langKey;
@@ -50,6 +52,14 @@ public class EmailUserVM implements Serializable {
 
     public void setWebsite(String website) {
         this.website = website;
+    }
+
+    public String getActivationKey() {
+        return activationKey;
+    }
+
+    public void setActivationKey(String activationKey) {
+        this.activationKey = activationKey;
     }
 
     public String getResetKey() {
@@ -91,6 +101,7 @@ public class EmailUserVM implements Serializable {
             ", phone='" + phone + '\'' +
             ", logo='" + logo + '\'' +
             ", website='" + website + '\'' +
+            ", activationKey='" + activationKey + '\'' +
             ", resetKey='" + resetKey + '\'' +
             ", langKey='" + langKey + '\'' +
             ", supportEmail='" + supportEmail + '\'' +

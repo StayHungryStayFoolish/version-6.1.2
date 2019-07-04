@@ -44,6 +44,7 @@ public class CacheConfiguration {
             createCache(cm, com.monolithic.domain.User.class.getName());
             createCache(cm, com.monolithic.domain.Authority.class.getName());
             createCache(cm, com.monolithic.domain.User.class.getName() + ".authorities");
+            createCache(cm, com.monolithic.domain.IPRecords.class.getName());
             // jhipster-needle-ehcache-add-entry
         };
     }

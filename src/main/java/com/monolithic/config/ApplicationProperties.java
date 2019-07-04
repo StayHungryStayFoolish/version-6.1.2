@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = false)
 public class ApplicationProperties {
 
+    private String ipApi;
     private String appPrefixName;
     private String appMiddleName;
     private EmailConfig emailConfig;
@@ -803,6 +804,14 @@ public class ApplicationProperties {
             this.smsLimit = smsLimit;
         }
 
+    }
+
+    public String getIpApi() {
+        return ipApi;
+    }
+
+    public void setIpApi(String ipApi) {
+        this.ipApi = ipApi;
     }
 
     public String getAppPrefixName() {

@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Storage } from 'react-jhipster';
-import { base64 } from 'app/shared/util/base64_password';
 
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 import { setLocale } from 'app/shared/reducers/locale';
@@ -114,8 +113,7 @@ export const getSession = () => async (dispatch, getState) => {
 };
 
 export const login = (username, password, rememberMe = false) => async (dispatch, getState) => {
-  var base = new base64();
-  password = base.encode(password);
+  password = btoa(password);
   const result = await dispatch({
     type: ACTION_TYPES.LOGIN,
     payload: axios.post('api/authenticate', { username, password, rememberMe })
