@@ -37,8 +37,8 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:mysql://localhost:3306/monolithic?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
-    username:
-    password:
+    username: root
+    password: admin
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -53,10 +53,13 @@ spring:
     show-sql: true
     properties:
       hibernate.id.new_generator_mappings: true
-      hibernate.connection.provider_disables_autocommit: true
+      # Current Version in double datasource must be false
+      hibernate.connection.provider_disables_autocommit: false
       hibernate.cache.use_second_level_cache: true
       hibernate.cache.use_query_cache: false
       hibernate.generate_statistics: false
+      # Current Version in double datasource must be false
+      hibernate.connection.autocommit: false
   liquibase:
     # Remove 'faker' if you do not want the sample data to be loaded automatically
     contexts: dev, faker
@@ -163,3 +166,10 @@ application:
       hourLimit: 5
       minuteExpire: 60
       minuteLimit: 2
+  matching:
+    datasource:
+      type: com.zaxxer.hikari.HikariDataSource
+      url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false
+      username: root
+      password: admin
+      driver-class-name: com.mysql.cj.jdbc.Driver

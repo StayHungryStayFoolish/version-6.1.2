@@ -17,6 +17,7 @@ public class ApplicationProperties {
     private EmailConfig emailConfig;
     private SmsConfig smsConfig;
     private RateLimit rateLimit;
+    private Matching matching;
 
     public static class EmailConfig {
 
@@ -806,6 +807,67 @@ public class ApplicationProperties {
 
     }
 
+    public static class Matching{
+
+        private Datasource datasource;
+
+        public static class Datasource{
+            private String type;
+            private String url;
+            private String username;
+            private String password;
+            private String driverClassName;
+
+            public String getType() {
+                return type;
+            }
+
+            public void setType(String type) {
+                this.type = type;
+            }
+
+            public String getUrl() {
+                return url;
+            }
+
+            public void setUrl(String url) {
+                this.url = url;
+            }
+
+            public String getUsername() {
+                return username;
+            }
+
+            public void setUsername(String username) {
+                this.username = username;
+            }
+
+            public String getPassword() {
+                return password;
+            }
+
+            public void setPassword(String password) {
+                this.password = password;
+            }
+
+            public String getDriverClassName() {
+                return driverClassName;
+            }
+
+            public void setDriverClassName(String driverClassName) {
+                this.driverClassName = driverClassName;
+            }
+        }
+
+        public Datasource getDatasource() {
+            return datasource;
+        }
+
+        public void setDatasource(Datasource datasource) {
+            this.datasource = datasource;
+        }
+    }
+
     public String getIpApi() {
         return ipApi;
     }
@@ -852,5 +914,14 @@ public class ApplicationProperties {
 
     public void setRateLimit(RateLimit rateLimit) {
         this.rateLimit = rateLimit;
+    }
+
+
+    public Matching getMatching() {
+        return matching;
+    }
+
+    public void setMatching(Matching matching) {
+        this.matching = matching;
     }
 }
